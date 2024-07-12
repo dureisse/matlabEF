@@ -1,0 +1,22 @@
+* Test de changement de maillages en quadratique
+OPTI DIME 2 ELEM TRI3;
+P1 = 0. 0.;
+P2 = 1. 0.;
+P3 = 0. 1.;
+L1 = P1 D 3 P2;
+
+M1 = MANU TRI3 P1 P2 P3;
+M1 = M1 CHAN QUAD;
+M1 = M1 CHAN TRI3;
+
+MT1 = L1 ET M1;
+
+
+L2 = CHAN L1 QUAD;
+M2 = M1 CHAN QUAD;
+
+OPTI SORT 'test_ChangeMesh';
+SORT AVS MT1;
+OPTI SORT 'poub';
+
+FIN;

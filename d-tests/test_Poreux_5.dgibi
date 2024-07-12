@@ -1,0 +1,83 @@
+* On teste le 3D
+LTRAC1 = VRAI;
+LTRAC1 = FAUX;
+
+*
+* Geometrie
+*
+L1 = 2.; L2 = 1.; L3 = 0.5;
+N1 = 2; N2 = 2; N3 = 2;
+N1 = 5; N2 = 5; N3 = 5;
+
+OPTI DIME 2 ELEM TRI3;
+P1 = 0. 0.; P2 = L1 0.; P3 = 0. L2;
+TLIG1 = P1 D N1 P2;
+TMAIL1 = TLIG1 TRAN N2 P3;
+
+OPTI DIME 3 ELEM TET4;
+P4 = 0. 0. L3;
+MAIL1 = TMAIL1 VOLU TRAN N3 P4;
+BAS1 HAUT1 TOUR1 = COTE MAIL1;
+
+X1 Y1 Z1 = COOR MAIL1;
+CHPO1 = BRUI BLAN UNIF 0. 0.2 MAIL1;
+CHPO1 = CHAN CHPO1 ATTRIBUT NATURE DIFFUS;
+CHPO2 = BRUI BLAN UNIF 0. 0.2 MAIL1;
+CHPO2 = CHAN CHPO2 ATTRIBUT NATURE DIFFUS;
+CHPO3 = BRUI BLAN UNIF 0. 0.2 MAIL1;
+CHPO3 = CHAN CHPO3 ATTRIBUT NATURE DIFFUS;
+
+DE1 = (EXCO SCAL CHPO1 UX NATURE DIFFUS) ET
+      (EXCO SCAL CHPO2 UY NATURE DIFFUS) ET
+      (EXCO SCAL CHPO3 UZ NATURE DIFFUS);
+DE2 = (X1 * (X1 - L1)) * (Y1 * (Y1 - L2)) * (Z1 * (Z1 - L3));
+DE2 = CHAN DE2 ATTRIBUT NATURE DIFFUS;
+DE1 = DE1 * DE2;
+
+MAIL1 = MAIL1 PLUS DE1;
+
+MAIL1 = MAIL1 CHAN TET4;
+TMAIL2 = TMAIL1 PLUS P3;
+ELIM (MAIL1 ET TMAIL2) 0.0001;
+
+SI (LTRAC1); trac mail1; FINSI;
+*
+* Materiau
+* module d'Young YOUN1
+YOUN1 = 1.;
+* coefficient de Poisson YNU1
+YNU1 = 0.2;
+* coefficient de "permeabilite" YH1 (3.6E-13 SI)
+YH1 = 566.6666;
+* coefficient de compressibilite YK1 (7.716E8 Pa)
+* ou module de Biot
+YK1 = 17.536;
+* coefficient de Biot (couplage)
+CBIOT1 = 0.78;
+*
+
+
+
+* CL Solides
+* On bloque le bas UX UY UZ
+CC1 = MANU CHPO BAS1 4 'UD1' 1. UX1 1. UY1 1. UZ1 1.
+  NATURE DISCRET;
+* On bloque UX UY autour
+CC1 = CC1 ET (MANU CHPO TOUR1 4 'UD2' 1. UX2 1. UY2 1. UZ2 0.
+  NATURE DISCRET);
+* On impose le deplacement du haut UX=0, UY=0, UZ
+CC1 = CC1 ET (MANU CHPO HAUT1 4 'UD3' 1. UX3 0. UY3 0. UZ3 1.
+  NATURE DISCRET);
+
+* CL fluides
+* FLux nul sur tout le bord
+
+  MODL2 = MODE MAIL1 MECANIQUE ELASTIQUE;
+  MATR2 = MANU CHML MODL2 YOUN YOUN1 NU YNU1
+          MOB YK1 COB CBIOT1 PERM YH1 VISC 1. GRAVITE;
+
+opti sort 'test_Poreux_5';
+sort avs mail1 CC1 matr2;
+opti sort 'poub';
+
+  fin;

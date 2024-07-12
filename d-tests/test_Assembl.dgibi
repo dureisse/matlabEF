@@ -1,0 +1,88 @@
+* Probleme avec resultante imposee et meme deplacement vertical
+OPTI DIME 2;
+OPTI MODE PLAN DEFO;
+
+LTRAC1 = FAUX;
+
+
+*
+* Geometrie
+* """""""""
+*
+*    TLIG3
+*  P4------P3
+*  |        |
+*  |        |
+*  |TLIG4   |TLIG2
+*  |        |
+*  |        |
+*  |        |
+*  P1------P2
+*    TLIG1
+
+* Dimensions (m)
+LARG1 = 2.e-2;  N1 = 8;
+HAUT1 = 1.e-2; N2 = 4;
+
+P1 = 0. 0.;
+P2 = LARG1 0.;
+P3 = LARG1 HAUT1;
+P4 = 0. HAUT1;
+
+OPTI ELEM TRI3;
+
+TLIG1 = P1 D N1 P2;
+TLIG2 = P2 D N2 P3;
+TLIG3 = P3 D N1 P4;
+TLIG4 = P4 D N2 P1;
+TCONT1 = TLIG1 ET TLIG2 ET TLIG3 ET TLIG4;
+TMAIL1 = SURF TCONT1 PLAN;
+
+* Materiau (Berea Sandstone)
+* """"""""
+* module d'Young
+YOUN1 = 19.44;
+* coefficient de Poisson
+YNU1 = 0.325;
+
+MODL1 = MODE TMAIL1 MECANIQUE ELASTIQUE;
+MATR1 = MANU CHML MODL1 'YOUN' YOUN1 'NU' YNU1 GRAVITE;
+
+* Conditions aux limites
+* """"""""""""""""""""""
+* Deplacement impose sur X
+* (on repere les noeuds avec DX et DY et les valeurs avec UX1 et UY1)
+MX1 = TLIG1 ET TLIG3 ET TLIG4;
+CHP1 = MANU CHPO MX1 2 'DX' 1 'UX1' 0. NATURE DISCRET;
+TITRE 'UX IMPOSE';
+SI (LTRAC1); TRAC TMAIL1 (EXCO CHP1 DX); FINSI;
+* Deplacement impose sur Y
+MY1 = TLIG1;
+CHP1 = CHP1 ET (MANU CHPO MY1 2 'DY' 1 'UY1' 0. NATURE DISCRET);
+TITRE 'UY IMPOSE';
+SI (LTRAC1); TRAC TMAIL1 (EXCO CHP1 DY); FINSI;
+* Deplacements identiques sur Y
+* (on repere les noeuds avec BY)
+MY2 = TLIG3;
+CHP1 = CHP1 ET (MANU CHPO MY2 2 'BY' 1 'UY1' 0. NATURE DISCRET);
+TITRE 'UY BLOQUE';
+SI (LTRAC1); TRAC TMAIL1 (EXCO CHP1 BY); FINSI;
+
+* Reference
+* """""""""
+MATR2 = MATE MODL1 'YOUN' YOUN1 'NU' YNU1;
+RIGI1 = RIGI MODL1 MATR2;
+B1 = BLOQ UX MX1;
+B2 = BLOQ UY MY1;
+B3 = RELA ENSE UY MY2;
+RIGIT1 = RIGI1 ET B1 ET B2 ET B3;
+FEXT1 = FORCE FY 1. MY2;
+DEPL1 = RESO RIGIT1 FEXT1;
+CHP1 = CHP1 ET (CHAN DEPL1 ATTRIBUT NATURE DISCRET);
+
+* On sort les donnees
+* """""""""""""""""""
+OPTI SORT 'test_Assembl';
+SORT AVS TMAIL1 MATR1 CHP1;
+OPTI SORT 'poub';
+FIN;

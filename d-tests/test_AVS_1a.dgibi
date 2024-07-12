@@ -1,0 +1,21 @@
+OPTI DIME 2 ELEM QUA4;
+P1 = 0. 0.; P2 = 1. 0.; P3 = 0. 1.;
+L1 = P1 D 3 P2;
+M1 = L1 TRAN 3 P3;
+
+OPTI ELEM TRI3;
+M2 = L1 TRAN 3 (-3. * P3);
+
+OPTI ELEM TRI6;
+M4 = M2 PLUS (-3.00 * P3);
+M4 = M4 CHAN QUAD;
+
+M3 = M1 ET M2 ET M4 ET L1;
+M3 = M2 ET M4 ET L1;
+
+C1 = COOR 2 M3;
+
+OPTI SORT 'test_AVS_1b.inp';
+SORT AVS M3 C1;
+OPTI SORT 'poub';
+FIN;

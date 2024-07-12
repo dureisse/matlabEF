@@ -1,0 +1,54 @@
+* test de l'axisymetrique
+* 1D plonge en 2D
+
+OPTI DIME 2 ELEM TRI3;
+OPTI MODE AXIS;
+
+LTRAC1 = FAUX;
+
+L1 = 2.; R1 = 2.; ALPHA = 30.;
+N1 = 4;
+P1 = R1 0.; P2 = (R1 - (L1 * (SIN ALPHA))) (L1 * (COS ALPHA));
+TMAIL1 = P1 D N1 P2;
+*OPTI ELEM TRI6;
+*MAIL1 = (P1 D N1 P2) PLUS P2;
+*TMAIL1 = TMAIL1 ET MAIL1;
+*ELIM TMAIL1 0.0001;
+TOTO = TMAIL1 TRAN 1 ((L1/2.) 0.);
+
+SI (LTRAC1); TRAC TMAIL1; FINSI;
+
+MODL1 = MODE TMAIL1 MECANIQUE ELASTIQUE;
+YOUN1 = 1.;
+YNU1 = 0.3;
+YRHO1 = 1.;
+MATR1 = MATE MODL1 YOUNG YOUN1 NU YNU1 RHO YRHO1;
+
+F1 = PRESS MASS (MODE TOTO MECANIQUE ELASTIQUE) TMAIL1 1;
+F1 = PRESS MASS (MODE TOTO MECANIQUE ELASTIQUE) (COOR 2 TMAIL1);
+
+x1 y1 = coor tmail1;
+cc1 = y1 ** 2; cc1 = cc1 / (maxi abs cc1);
+cc2 = y1 + x1; cc2 = cc2 / (maxi abs cc2);
+chpo1 = (EXCO SCAL CC1 UR NATURE DIFFUS) ET
+        (EXCO SCAL CC2 UZ NATURE DIFFUS);
+*chpo1 = chpo1 et (CHAN F1 ATTRIBUT NATURE DIFFUS);
+chpo1 = CHAN F1 ATTRIBUT NATURE DIFFUS;
+
+SI (1 EGA 0);
+MASS1 = MASS MODL1 MATR1;
+RIGI1 = RIGI MODL1 MATR1;
+
+xval1 = xtmx chpo1 mass1;
+list xval1;
+list (xval1 - 8.4410442861);
+xval2 = xtmx chpo1 rigi1;
+list xval2;
+list (xval2 - 19.703142489);
+FINSI;
+
+OPTI SORT 'test_Axis_2';
+SORT AVS TMAIL1 chpo1 MATR1;
+OPTI SORT 'poub';
+
+FIN;

@@ -1,0 +1,66 @@
+* On teste l'asisymetrique
+
+OPTI DIME 2 ELEM TRI3;
+OPTI MODE AXIS;
+LMOT1 = MOTS UX UY; LMOT2 = MOTS FX FY;
+LHOT1 = MOTS T; LHOT2 = MOTS Q;
+LTRAC1 = FAUX;
+XTRAC1 = FAUX;
+SI (XTRAC1); opti trac psc; FINSI;
+*
+* Geometrie
+*
+L1 = 2.; L2 = 1.; L3 = 0.5; R1 = 0.1;
+N1 = 4; N2 = 1;
+*L1 = 20.; L2 = 10.; L3 = 5.;
+*N1 = 30; N2 = 15;
+P1 = R1 0.; P2 = (R1 + L1) 0.; P3 = (R1 + L1) L2; P4 = R1 L2;
+TLIG1 = P1 D N1 P2;
+TMAIL1 = TLIG1 TRAN N2 (P3 MOINS P2);
+TOTO1 TLIG4 TLIG2 TLIG3 = COTE TMAIL1;
+* TRI6 a bords droits
+MAIL1 = TMAIL1 CHAN TRI6;
+SI (LTRAC1); trac mail1; FINSI;
+*
+* Materiau
+* module d'Young YOUN1
+YOUN1 = 1.;
+* coefficient de Poisson YNU1
+YNU1 = 0.2;
+* coefficient de "permeabilite" YH1 (3.6E-13 SI)
+YH1 = 566.6666;
+* coefficient de compressibilite YK1 (7.716E8 Pa)
+* ou module de Biot
+YK1 = 17.536;
+* coefficient de Biot (couplage)
+CBIOT1 = 0.78;
+*
+* Couple
+  MODL2 = MODE MAIL1 POREUX ELASTIQUE;
+  MATR2 = MATE MODL2 YOUNG YOUN1 NU YNU1
+                     MOB YK1 COB CBIOT1 PERM YH1 VISC 1.;
+  PERM2 = PERM MODL2 MATR2;
+  RIGI2 = RIGI MODL2 MATR2;
+  x1 y1 = coor mail1;
+  x2 y2 = coor tmail1;
+cc1 = y1 ** 2; cc1 = cc1 / (maxi abs cc1);
+cc2 = y1 + x1; cc2 = cc2 / (maxi abs cc2);
+cc3 = y2 - x2; cc3 = cc3 / (maxi abs cc3);
+* cc3 = proi mail1 cc3 (mode tmail1 mecanique elastique);
+cc3 = proi mail1 (chan CHAM cc3 tmail1)
+ (mode tmail1 mecanique elastique);
+
+  cc1 = (exco scal cc1 ux) et (exco scal cc2 uy) et
+        (exco scal cc3 p);
+  xval1 = xtmx cc1 rigi2;
+list xval1;
+list (xval1 + 0.20382324028);
+  xval2 = xtmx cc1 perm2;
+list xval2;
+list (xval2 - 3552.3976242249229);
+
+opti sort 'test_Poreux_4';
+sort avs mail1 cc1 matr2;
+opti sort 'poub';
+
+  fin;

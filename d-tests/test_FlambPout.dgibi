@@ -1,0 +1,36 @@
+* test de flambage de poutre sur appui elastique reparti
+OPTI DIME 2 ELEM SEG2;
+
+LON1 = 10.;
+N1 = 50;
+P1 = 0. 0.; P2 = LON1 0.;
+L1 = P1 D N1 P2;
+
+* Raideur repartie et section et inertie
+*k = 10.E8;
+k = 1.E2;
+k = 5.E2;
+k = 1.E3;
+k = 5.E3;
+k = 1.E4;
+k = 5.E4;
+k = 1.E5;
+k = 5.E5;
+k = 1.E6;
+k = 5.E6;
+
+S = 2.E-2;
+YOUN1 = 2.E11;
+YNU1 = 0.33;
+RHO1 = k / S;
+I1 = 1. / RHO1;
+MESS 'k/E' (k/YOUN1);
+
+MODL1 = MODE L1 MECANIQUE ELASTIQUE ISOTROPE POUT;
+MATR1 = MATE MODL1 YOUN YOUN1 NU YNU1 SECT S INRZ I1 RHO RHO1;
+
+OPTI SORT 'test_FlambPout';
+SORT AVS L1 MATR1;
+OPTI SORT 'poub';
+
+FIN;

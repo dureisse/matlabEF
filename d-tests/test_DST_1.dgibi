@@ -1,0 +1,49 @@
+OPTI DIME 3 ELEM QUA4;
+*P1 = 0. 0. 0.;
+*P2 = 1. 0. 0.;
+*P4 = 0. 1. 0.;
+P1 = 0.1 0. 0.;
+P2 = 2.3 0.1 0.;
+P4 = -0.2 1. 0.;
+*P1 = 0. 0. 0.;
+*P2 = 4. 0. 0.;
+*P4 = 0. 4. 0.;
+*P1 = 0. 0. 0.;
+*P2 = 4. 0. 0.;
+*P4 = 0. 1. 0.;
+M1 = MANU TRI3 P1 P2 P4;
+*M1 = M1 TOUR 10. P1 (0. 1. 0.);
+*M1 = M1 TOUR 10. P1 (0. 0. 1.);
+
+MODL1 = MODE M1 MECANIQUE ELASTIQUE DST;
+*MATR1 = MATE MODL1 YOUN 0.5 NU 0. EPAI 0.2;
+MATR1 = MATE MODL1 YOUN 1. NU 0.3 EPAI 0.1;
+*MATR1 = MATE MODL1 YOUN 1. NU 0.3 EPAI 1.;
+RIGI1 = RIGI MODL1 MATR1;
+
+X1 = COOR 1 M1;
+Y1 = COOR 2 M1;
+Z1 = COOR 3 M1;
+U1 = (EXCO SCAL (X1**2) UX) ET (EXCO SCAL Y1 UY) ET
+     (EXCO SCAL X1 UZ) ET (EXCO SCAL (X1 + Y1) RX) ET
+     (EXCO SCAL (Y1 - X1) RY) ET (EXCO SCAL X1 RZ);
+
+XVAL1 = XTMX RIGI1 U1;
+list xval1;
+** Elem de ref, E = 1, nu = 0.3, epai = 1.
+*list (xval1 - 1.7658262514632226);
+** Elem de ref, E = 1, nu = 0.3, epai = 0.1
+*list (xval1 - 0.1436462260812054);
+** Elem de ref, E = 0.5, nu = 0., epai = 0.2
+*list (xval1 - 0.1027667275385838);
+** Elem de ref x 4, E = 1, nu = 0.3, epai = 0.1
+*list (xval1 - 17.0625394735513);
+* Elem distordu, E = 1, nu = 0.3, epai = 0.1
+list (xval1 - 1.007360763118792);
+
+OPTI SORT 'test_DST_1';
+SORT AVS M1 U1 MATR1;
+OPTI SORT 'poub';
+
+FIN;
+

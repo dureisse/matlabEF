@@ -1,0 +1,79 @@
+* test de l'axisymetrique
+
+OPTI DIME 2 ELEM TRI3;
+OPTI MODE AXIS;
+
+LTRAC1 = FAUX;
+
+L1 = 2.; L2 = 1.; L3 = 0.5; R1 = 0.1;
+N1 = 4; N2 = 1;
+*L1 = 20.; L2 = 10.; L3 = 5.;
+*N1 = 30; N2 = 15;
+P1 = R1 0.; P2 = (R1 + L1) 0.; P3 = (R1 + L1) L2; P4 = R1 L2;
+TLIG1 = P1 D N1 P2;
+* TRI3
+TMAIL1 = TLIG1 TRAN N2 (P3 MOINS P2);
+TOTO1 TLIG4 TLIG2 TLIG3 = COTE TMAIL1;
+
+TTM1 = TMAIL1;
+* TRI6 a bords droits
+MAIL1 = TMAIL1 CHAN TRI6;
+* TRI6
+TMAIL1 = MAIL1;
+
+SI (LTRAC1); TRAC TMAIL1; FINSI;
+
+MODL1 = MODE TMAIL1 MECANIQUE ELASTIQUE;
+YOUN1 = 1.;
+YNU1 = 0.3;
+YRHO1 = 1.;
+MATR1 = MATE MODL1 YOUNG YOUN1 NU YNU1 RHO YRHO1;
+MASS1 = MASS MODL1 MATR1;
+RIGI1 = RIGI MODL1 MATR1;
+
+MODL2 = MODE TMAIL1 POREUX;
+MATR2 = MATE MODL2 YOUNG YOUN1 NU YNU1 RHO YRHO1
+        MOB 2. COB 0.5 PERM 0.1 VISC 1.;
+RIGI2 = RIGI MODL2 MATR2;
+PERM2 = PERM MODL2 MATR2;
+
+TMODL1 = MODE TTM1 MECANIQUE ELASTIQUE;
+TMATR2 = MANU CHML TMODL1 YOUN YOUN1 NU YNU1
+         MOB 2. COB 0.5 PERM 0.1 VISC 1. GRAVITE;
+
+x1 y1 = coor tmail1;
+cc1 = y1 ** 2; cc1 = cc1 / (maxi abs cc1);
+cc2 = y1 + x1; cc2 = cc2 / (maxi abs cc2);
+chpo1 = (EXCO SCAL CC1 UR NATURE DIFFUS) ET
+        (EXCO SCAL CC2 UZ NATURE DIFFUS);
+
+x1 y1 = coor ttm1;
+cc1 = y1 ** 2; cc1 = cc1 / (maxi abs cc1);
+cc2 = y1 + x1; cc2 = cc2 / (maxi abs cc2);
+tchpo1 = (EXCO SCAL (CC1 + CC2) P NATURE DIFFUS);
+
+ch1 = chan cham tchpo1 tmodl1 noeud;
+chpo2 = proi tmail1 ch1;
+chpo1 = chpo1 et chpo2;
+
+xval1 = xtmx chpo1 mass1;
+list xval1;
+list (xval1 - 8.4410442861);
+xval2 = xtmx chpo1 rigi1;
+list xval2;
+list (xval2 - 19.703142489);
+
+xval3 = xtmx chpo1 rigi2;
+list xval3;
+list (xval3 + 0.66152630382);
+
+xval4 = xtmx chpo2 perm2;
+list xval4;
+list (xval4 - 2.5617873746);
+
+OPTI SORT 'test_Axis_1';
+SORT AVS TMAIL1 chpo1 MATR2 SUIT;
+SORT AVS TTM1 tchpo1 TMATR2 SUIT;
+OPTI SORT 'poub';
+
+FIN;

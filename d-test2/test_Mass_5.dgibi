@@ -1,0 +1,41 @@
+* Test masse invriante par mouvement fini de solide rigide,`
+* idem sur une configuration deformeee, pourvu que la densite
+* soit updtee ave la conservation de la masse
+OPTI DIME 2 ELEM QUA4;
+P1 = 0. 0.;
+P2 = 1. 0.;
+LI1 = P1 D 4 P2;
+P4 = 0. 1.;
+M1 = LI1 TRAN 4 P4;
+M2 = M1 SYME DROITE P1 P4;
+M2 = M2 CHAN TRI3;
+ELIM M1 M2 0.001;
+M3 = M1 SYME DROITE P1 P2;
+M4 = M3 SYME DROITE P1 P4;
+M3 = M3 CHAN QUA8;
+M4 = M4 CHAN TRI6;
+
+OPTI DIME 3 ELEM CUB8;
+P5 = 0. 0. 0.1;
+MAIL1 = M1 VOLU TRAN 2 P5;
+OPTI DIME 3 ELEM TET4;
+MAIL2 = M2 VOLU TRAN 2 P5;
+OPTI DIME 3 ELEM CU20;
+MAIL3 = M3 VOLU TRAN 2 P5;
+OPTI DIME 3 ELEM TE10;
+MAIL4 = M4 VOLU TRAN 2 P5;
+
+*MAILT1 = MAIL1 ET MAIL2 ET MAIL3 ET MAIL4;
+MAILT1 = MAIL1 ET MAIL2;
+MODL1 = MODE MAILT1 MECANIQUE ELASTIQUE;
+MATE1 = MATE MODL1 RHO 1.;
+X1 = COOR 1 MAILT1;
+U1 = (EXCO SCAL (0.1 * (X1 ** 2)) UY) ET
+     (EXCO SCAL (0.05 * ((ABS X1) ** 2.5)) UX) ET
+     (EXCO SCAL (0.05 * ((ABS X1) ** 1.5)) UZ);
+
+OPTI SORT 'test_Mass_5';
+SORT AVS MAILT1 U1 MATE1;
+OPTI SORT 'poub';
+
+FIN;

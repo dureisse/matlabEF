@@ -1,0 +1,17 @@
+* test de changement de supports
+
+OPTI DIME 2 ELEM TRI6;
+P1 = 0. 0.;
+P2 = 10. 0.;
+P3 = 0. 8.;
+L1 = P1 D 5 P2;
+MAIL1 = L1 TRAN 5 P3;
+
+CHPO1 = BRUI BLAN GAUS 1. 0.5 MAIL1;
+CHPO1 = EXCO SCAL CHPO1 P;
+
+OPTI SORT 'test_Cham';
+SORT AVS MAIL1 CHPO1;
+OPTI SORT 'poub';
+
+FIN;
